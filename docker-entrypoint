@@ -1,0 +1,34 @@
+#! /bin/sh -e
+
+if [ "x$1" = "x-" ] ;then
+  shift
+  exec $@
+elif [ $# -eq 1 ] ; then
+  INPUT_SCRIPT="$1"
+elif [ $# -eq 0 ] ; then
+  for f in bin/* ; do
+    if [ -x "$f" -a -f "$f" ] ; then
+      INPUT_SCRIPT="$f"
+    fi
+  done
+  if [ "x$INPUT_SCRIPT" = x ] ; then
+    echo "Could not find .js script in ./bin directory. Abort" >&2
+    exit 1
+  else
+    echo "Will build static executable from script $INPUT_SCRIPT"
+  fi
+else
+  cat <<EOF >&2
+SYNOPSYS:
+  - CMD [[ARG] ...]
+    Prefix a command by a dash character to execute it.
+
+  [JS_SCRIPT]
+    Specify Javascript script to convert into a static binary.
+    Default value is the unique file in /usr/src/bin/ directory.
+EOF
+  exit 1
+fi
+
+OUTPUT_SCRIPT="dist/${INPUT_SCRIPT%.*}-"`uname -s`-`uname -m`
+nexe -i "$INPUT_SCRIPT" -o "$OUTPUT_SCRIPT" -r "$NODEJS_VERSION"
